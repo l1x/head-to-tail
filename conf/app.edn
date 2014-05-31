@@ -1,0 +1,9 @@
+{ 
+  :words {  
+    :head "herd"
+    :tail "tail"
+  }
+  :dict {
+    :file "/usr/share/dict/words"
+  }
+};end
