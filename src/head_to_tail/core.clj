@@ -47,46 +47,6 @@
   [file] 
   (map lower-case (split-lines (:ok (read-file file)))))
 
-(defn fast-path-words 
-  " Takes 2 words and a dictionary as the input 
-    and return maximum count(word) words that are English words
-    by trying to replace 1 letter in the first word from the 
-    corresponding letter from the second word
-    example: head tail dict -> (heal)  "
-  ^clojure.lang.PersistentList [^String head ^String tail ^clojure.lang.PersistentList dict]
-  (into () 
-    (intersection 
-      (set dict) 
-      (set (for [c (range (count head))]  (str (subs head 0 c) (nth tail c) (subs head (+ c 1) )))))))
-
-(defn head-to-tail-old
-  [config]
-  (let [  head (get-in config [:ok :words :head]) 
-          dict (filter #(= (count head) (count %)) (dict (get-in config [:ok :dict :file])))
-          tail (get-in config [:ok :words :tail])
-          res  (atom {}) 
-          skip-list (atom ())
-          prev-words (atom ()) ]
-
-;{head (heal)}
-;{head (heal), heal (teal heil)}
-;{head (heal), heal (teal heil), heil (hail)}
-;{head (heal), heal (teal heil), heil (hail), hail (tail)}
-
-(loop [word head]
-  (let [  skip-list (conj (filter (comp #{word} @res) (keys @res)) word)
-          words-fp  (remove (set skip-list) (fast-path-words word tail dict))
-          words-rp  (remove (set skip-list) (find-all-words word dict))
-          words     (cond (not (empty? words-fp)) words-fp :else words-rp) ]
-
-    (println words)
-    (swap! res assoc-in [word] words)
-    (println @res)
-    (if (contains? (set words) tail)
-      "stop"
-    ;else
-      (recur (rand-nth words)))))))
-
 (defn head-to-tail
   [config]
   (let [  head        (get-in config [:ok :words :head])
@@ -95,15 +55,13 @@
           skip-list   (atom ())
           prev-words  (atom ()) 
           adj         (atom {}) ]
-
     ;ops
     (doseq [word dict] 
       (let [skip-list (conj (filter (comp #{word} @adj) (keys @adj)) word)]
       (swap! adj assoc-in [word] (remove (set skip-list) (find-all-words word dict)))))
       (println @adj)
       (let [g (graph @adj)]
-        (println (bf-path g head tail))
-        (view g))))
+        (println (bf-path g head tail)))))
 
 
 
