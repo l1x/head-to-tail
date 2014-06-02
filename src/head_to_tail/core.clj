@@ -18,15 +18,17 @@
     ;external
     [clojure.data.json  :as     json                      ]
     [clojure.set        :refer  [intersection]            ]
+    [loom.graph         :refer  :all                      ]
+    [loom.io            :refer  :all                      ]
+    [loom.alg           :refer  :all                      ]
     [clojure.string     :refer  [split-lines lower-case]  ])
   (:gen-class))
 
 (defn- word-to-patterns
   "This must use position based replace"
-  [w] 
+  [word] 
   (map re-pattern 
-    (for [c w] 
-      (str "\\b" (clojure.string/replace w (str c) ".") "\\b"))))
+    (for [char (range (count word))]  (str "\\b" (subs word 0 char) "." (subs word (+ char 1) ) "\\b"))))
  
 (defn- find-words
   [p dic] 
@@ -57,7 +59,7 @@
       (set dict) 
       (set (for [c (range (count head))]  (str (subs head 0 c) (nth tail c) (subs head (+ c 1) )))))))
 
-(defn head-to-tail
+(defn head-to-tail-old
   [config]
   (let [  head (get-in config [:ok :words :head]) 
           dict (filter #(= (count head) (count %)) (dict (get-in config [:ok :dict :file])))
@@ -85,27 +87,24 @@
     ;else
       (recur (rand-nth words)))))))
 
-; (defstruct tree :val :w0 :w1 :w2 :w3)
+(defn head-to-tail
+  [config]
+  (let [  head        (get-in config [:ok :words :head])
+          tail        (get-in config [:ok :words :tail])
+          dict        (filter #(= (count head) (count %)) (dict (get-in config [:ok :dict :file])))
+          skip-list   (atom ())
+          prev-words  (atom ()) 
+          adj         (atom {}) ]
 
-; (defn bftrav [& trees]
-;   (when trees
-;     (concat trees 
-;       (->> trees
-;       (mapcat (juxt :w0 :w1 :w2 :w3))
-;       (filter identity)
-;       (apply bftrav)))))
+    ;ops
+    (doseq [word dict] 
+      (let [skip-list (conj (filter (comp #{word} @adj) (keys @adj)) word)]
+      (swap! adj assoc-in [word] (remove (set skip-list) (find-all-words word dict)))))
+      (println @adj)
+      (let [g (graph @adj)]
+        (println (bf-path g head tail))
+        (view g))))
 
-; (def my-tree 
-;   (struct tree "head"
-;     (struct tree "tead")
-;     (struct tree "haad")
-;     (struct tree "heid")
-;     (struct tree "heal"
-;       (struct tree "teal"
-;         (struct tree "taal") 
-;         (struct tree "teil"))
-;       (struct tree "haal")
-;       (struct tree "hail"
-;         (struct tree "tail")))))
 
-; (bftrav my-tree)
+
+
