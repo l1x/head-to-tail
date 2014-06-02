@@ -14,53 +14,11 @@
 (ns head-to-tail.core
   (:require
     ;internal
+    [head-to-tail.helpers :refer [read-file]              ]
     ;external
-    [clojure.tools.cli          :refer [parse-opts]             ]
-    [clojure.string             :refer [split-lines lower-case] ]
-    [clojure.edn                :as     edn                     ])
-  (:import 
-    [java.io File])
+    [clojure.data.json  :as     json                      ]
+    [clojure.string     :refer  [split-lines lower-case]  ])
   (:gen-class))
-
-;; Helpers 
-
-; Reading a file (the safe way)
-; the only problem if the input file is huge
-; todo check size and refuse to read over 100k
-(defn read-file
-  "Returns {:ok string } or {:error...}"
-  [^String file]
-  (try
-    (cond
-      (.isFile (File. file))
-        {:ok (slurp file) }                         ; if .isFile is true {:ok string}
-      :else
-        (throw (Exception. "Input is not a file"))) ;the input is not a file, throw exception
-  (catch Exception e
-    {:error "Exception" :fn "read-file" :exception (.getMessage e) }))) ; catch all exceptions
-
-;Parsing a string to Clojure data structures the safe way
-(defn parse-edn-string
-  [s]
-  (try
-    {:ok (clojure.edn/read-string s)}
-  (catch Exception e
-    {:error "Exception" :fn "parse-config" :exception (.getMessage e)})))
-
-;This function wraps the read-file and the parse-edn-string
-;so that it only return {:ok ... } or {:error ...} 
-(defn read-config 
-  [file]
-  (let 
-    [ file-string (read-file file) ]
-    (cond
-      (contains? file-string :ok)
-        ;this return the {:ok} or {:error} from parse-edn-string
-        (parse-edn-string (file-string :ok))
-      :else
-        file-string)))
-
-;; OPS
 
 (defn- word-to-patterns
   [w] 
@@ -81,70 +39,48 @@
           [p (word-to-patterns word)] 
           (find-words p dic))))))
 
-(defn h-2-t-rec [])
+;(defn find-replacement 
+;  [word char pos]
+;  (let [dict (dict (get-in config [:ok :dict :file]))]
+;  
+;  )
+
+(defn dict [file] (map lower-case (split-lines (:ok (read-file file)))))
 
 (defn head-to-tail
   [config]
   (let [  head (get-in config [:ok :words :head]) 
-          dict (map lower-case (split-lines (:ok (read-file (get-in config [:ok :dict :file])))))
+          dict (filter #(= (count head) (count %)) (dict (get-in config [:ok :dict :file])))
           tail (get-in config [:ok :words :tail])
-          res  (atom ()) 
+          res  (atom {}) 
           skip-list (atom ())
-          prev-words (atom ())]
-    (println head tail)
-    ;find all
-    (loop [word head]
-      (if (= word tail)
-        (println "stop")
-      (let [words (remove (set @skip-list) (find-all-words word dict))]
-        ;(println "words: " words)
-        (if (or (nil? word) (empty? words))
-            (recur (rand-nth @prev-words))
-        ;else
-            (let [apad ""]
-          (swap! res conj {word words})
-          (reset! prev-words words)
-          (swap! skip-list conj words)
-          (swap! skip-list conj word)
-          (swap! skip-list flatten)
-          (swap! skip-list distinct)
-          (println "res: " @res)
-          ;(println"skip-list: " @skip-list)
-          (recur (first words)))))))))
+          prev-words (atom ()) ]
+(println (count dict))
+; look up all the words that are different in one letter
+; remove the parent words from this list
+; recur with the random element of this list
 
-;; CLI
+; 0:
+;   lookup: head -> dead heal
+;   skip-list: ()
+;   {"head" ("dead" "heal"....)}
 
-(defn exit [status msg]
-  (println msg)
-  (System/exit status))
+; 1:
+;   lookup: dead -> head lead deal
+;   skip-list: ("head")
+;   {"dead"} -> ("lead"...)
 
-(def cli-options
-  [
-    ["-f" "--config-file FILE" "Configuration file" :default "conf/app.edn"]
-    ["-d" "--dictionary" "Initiate connections" :default "/usr/share/dict/words" ]
-  ])
+(loop [word head]
+  (println word)
+  (let [  skip-list (filter (comp #{word} @res) (keys @res))
+          words (remove (set skip-list) (find-all-words word dict)) ]
+    (swap! res assoc-in [word] words)
+    (println (keys @res))
+    (if (contains? (set words) tail)
+      "stop"
+    ;else
+      (do (println (count words))
+      (recur (rand-nth words))))))))
 
-(defn -main [& args]
-  ;same-named symbols to the map keys
-  ;parse-opts returns -> {:options {:config-file "file/path"}, :arguments [print-config], :summary...}
-  (let [  {:keys [options arguments errors summary]} (parse-opts args cli-options)
-          ; options => {:config-file "file/path" :help true ...}
-          config (read-config (:config-file options)) ]
+    
 
-    ; Handle help and error conditions
-    (cond
-      (or (empty? config) (:error config))
-        (exit 1 (str "Config cannot be read or parsed..." "\n" config))
-      errors
-        (exit 1 (str "Incorrect options supplied... Exiting...")))
-
-    ; Execute program with options
-    (case (first arguments)
-      "print-config"
-        (println config)
-      "head-to-tail"
-        (println (head-to-tail config))
-      ;default
-        (exit 1 (println "Dead end")))))
-
-;; END

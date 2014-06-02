@@ -1,9 +1,9 @@
 { 
   :words {  
-    :head "herd"
+    :head "head"
     :tail "tail"
   }
   :dict {
-    :file "/usr/share/dict/words"
+    :file "data/wordsEn.txt"
   }
 };end

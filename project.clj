@@ -8,6 +8,7 @@
     [org.clojure/core.async       "0.1.303.0-886421-alpha"]
     [org.clojure/tools.cli        "0.3.1"]
     [org.clojure/tools.logging    "0.2.6"]
+    [org.clojure/data.json "0.2.4"]
     [com.google.guava/guava       "16.0" ]
     [aysylu/loom                  "0.4.2"]
     [org.clojure/data.json        "0.2.4"]]
@@ -28,4 +29,4 @@
     "-Dcom.sun.management.jmxremote.ssl=false"
     ;"-Xprof" "-Xrunhprof"
   ]
-  :main head-to-tail.core)
+  :main head-to-tail.cli)
