@@ -53,7 +53,6 @@
           tail        (get-in config [:ok :words :tail])
           dict        (filter #(= (count head) (count %)) (dict (get-in config [:ok :dict :file])))
           skip-list   (atom ())
-          prev-words  (atom ()) 
           adj         (atom {}) ]
     ;ops
     (doseq [word dict] 
