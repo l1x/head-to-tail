@@ -17,10 +17,12 @@
     [head-to-tail.helpers :refer [read-file]              ]
     ;external
     [clojure.data.json  :as     json                      ]
+    [clojure.set        :refer  [intersection]            ]
     [clojure.string     :refer  [split-lines lower-case]  ])
   (:gen-class))
 
 (defn- word-to-patterns
+  "This must use position based replace"
   [w] 
   (map re-pattern 
     (for [c w] 
@@ -39,13 +41,21 @@
           [p (word-to-patterns word)] 
           (find-words p dic))))))
 
-;(defn find-replacement 
-;  [word char pos]
-;  (let [dict (dict (get-in config [:ok :dict :file]))]
-;  
-;  )
+(defn dict 
+  [file] 
+  (map lower-case (split-lines (:ok (read-file file)))))
 
-(defn dict [file] (map lower-case (split-lines (:ok (read-file file)))))
+(defn fast-path-words 
+  " Takes 2 words and a dictionary as the input 
+    and return maximum count(word) words that are English words
+    by trying to replace 1 letter in the first word from the 
+    corresponding letter from the second word
+    example: head tail dict -> (heal)  "
+  ^clojure.lang.PersistentList [^String head ^String tail ^clojure.lang.PersistentList dict]
+  (into () 
+    (intersection 
+      (set dict) 
+      (set (for [c (range (count head))]  (str (subs head 0 c) (nth tail c) (subs head (+ c 1) )))))))
 
 (defn head-to-tail
   [config]
@@ -55,32 +65,47 @@
           res  (atom {}) 
           skip-list (atom ())
           prev-words (atom ()) ]
-(println (count dict))
-; look up all the words that are different in one letter
-; remove the parent words from this list
-; recur with the random element of this list
 
-; 0:
-;   lookup: head -> dead heal
-;   skip-list: ()
-;   {"head" ("dead" "heal"....)}
-
-; 1:
-;   lookup: dead -> head lead deal
-;   skip-list: ("head")
-;   {"dead"} -> ("lead"...)
+;{head (heal)}
+;{head (heal), heal (teal heil)}
+;{head (heal), heal (teal heil), heil (hail)}
+;{head (heal), heal (teal heil), heil (hail), hail (tail)}
 
 (loop [word head]
-  (println word)
-  (let [  skip-list (filter (comp #{word} @res) (keys @res))
-          words (remove (set skip-list) (find-all-words word dict)) ]
+  (let [  skip-list (conj (filter (comp #{word} @res) (keys @res)) word)
+          words-fp  (remove (set skip-list) (fast-path-words word tail dict))
+          words-rp  (remove (set skip-list) (find-all-words word dict))
+          words     (cond (not (empty? words-fp)) words-fp :else words-rp) ]
+
+    (println words)
     (swap! res assoc-in [word] words)
-    (println (keys @res))
+    (println @res)
     (if (contains? (set words) tail)
       "stop"
     ;else
-      (do (println (count words))
-      (recur (rand-nth words))))))))
+      (recur (rand-nth words)))))))
 
-    
+; (defstruct tree :val :w0 :w1 :w2 :w3)
 
+; (defn bftrav [& trees]
+;   (when trees
+;     (concat trees 
+;       (->> trees
+;       (mapcat (juxt :w0 :w1 :w2 :w3))
+;       (filter identity)
+;       (apply bftrav)))))
+
+; (def my-tree 
+;   (struct tree "head"
+;     (struct tree "tead")
+;     (struct tree "haad")
+;     (struct tree "heid")
+;     (struct tree "heal"
+;       (struct tree "teal"
+;         (struct tree "taal") 
+;         (struct tree "teil"))
+;       (struct tree "haal")
+;       (struct tree "hail"
+;         (struct tree "tail")))))
+
+; (bftrav my-tree)
