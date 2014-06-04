@@ -50,6 +50,6 @@
       "print-config"
         (println config)
       "head-to-tail"
-        (println (head-to-tail config))
+        (head-to-tail config)
       ;default
         (exit 1 (println "Dead end")))))

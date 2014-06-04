@@ -1,14 +1,14 @@
 # head-to-tail
 
-A Clojure library designed to ... well, that part is up to you.
+A simple Clojure app for solving the head to tail problem. Be aware there are 
+different versions of this problem. This implementation is a more relaxed one,
+in terms of changing letters. It uses the popular graph library Loom and gets all
+of the words into a graph first. This step takes the longest.
 
 ## Usage
 
-FIXME
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2014 Istvan Szukacs (see LICENSE file)
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.

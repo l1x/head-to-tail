@@ -22,15 +22,23 @@
 
 (defn read-file
   "Returns {:ok string } or {:error...}"
-  [^String file]
+  [^File file]
   (try
     (cond
-      (.isFile (File. file))
+      (.isFile file)
         {:ok (slurp file) }                         ; if .isFile is true {:ok string}
       :else
         (throw (Exception. "Input is not a file"))) ;the input is not a file, throw exception
   (catch Exception e
     {:error "Exception" :fn "read-file" :exception (.getMessage e) }))) ; catch all exceptions
+
+(defn save-file
+  "Returns {:ok string } or {:error...}"
+  [^File file content]
+    (try
+      {:ok (spit file content)}
+    (catch Exception e
+      {:error "Exception" :fn "save-file" :exception (.getMessage e)})))
 
 ;Parsing a string to Clojure data structures the safe way
 (defn parse-edn-string
@@ -43,9 +51,9 @@
 ;This function wraps the read-file and the parse-edn-string
 ;so that it only return {:ok ... } or {:error ...}
 (defn read-config
-  [file]
+  [path]
   (let
-    [ file-string (read-file file) ]
+    [ file-string (read-file (File. path)) ]
     (cond
       (contains? file-string :ok)
         ;this return the {:ok} or {:error} from parse-edn-string
