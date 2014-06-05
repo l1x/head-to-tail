@@ -1,4 +1,4 @@
-(defproject head-to-tail "0.0.2"
+(defproject head-to-tail "0.0.1"
   :description ""
   :url ""
   :license {:name " Apache License Version 2.0"
