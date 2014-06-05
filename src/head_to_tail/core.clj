@@ -56,12 +56,9 @@
   (let [adj (atom {})]
     (doseq [word dict]
       (println "word: " word)
-      (let [skip-list (conj 
-                        (filter (comp #{word} @adj) (keys @adj)) word)]
-      (swap! adj assoc-in [word] 
-        (remove (set skip-list) (find-all-words word dict)))))
+      (swap! adj assoc-in [word] (find-all-words word dict))))
     ;return
-    @adj))
+    @adj)
 
 (defn save-adjacency-list 
   [adj length] 
