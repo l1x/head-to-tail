@@ -56,9 +56,9 @@
   (let [adj (atom {})]
     (doseq [word dict]
       (println "word: " word)
-      (swap! adj assoc-in [word] (find-all-words word dict))))
+      (swap! adj assoc-in [word] (find-all-words word dict)))
     ;return
-    @adj)
+    @adj))
 
 (defn save-adjacency-list 
   [adj length] 
