@@ -86,8 +86,12 @@
         (do 
           (println "Saved adjacency-list is found...")
           (println "The shortest path: " 
-            (breadth-first-path 
-              (graph (:ok (parse-edn-string (:ok adj-list)))) head tail)))
+            (let [  adj-map (into (sorted-map) 
+                              (:ok (parse-edn-string (:ok adj-list))))
+                    gh (graph adj-map) ]
+            (do ;(view gh)
+            (println adj-map)
+            (breadth-first-path gh head tail)))))
       :else
         (let 
           [adj-list-new (gen-adjacency-list dict)]

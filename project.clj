@@ -20,7 +20,7 @@
     }
   }
   :jvm-opts [
-    "-Xms256m" "-Xmx512m" "-server" "-XX:MaxPermSize=128m"
+    "-Xms256m" "-Xmx512m" "-server" 
     "-XX:NewRatio=2" "-XX:+UseConcMarkSweepGC"
     "-XX:+TieredCompilation" "-XX:+AggressiveOpts"
     "-Dcom.sun.management.jmxremote"
@@ -29,4 +29,5 @@
     "-Dcom.sun.management.jmxremote.ssl=false"
     ;"-Xprof" "-Xrunhprof"
   ]
+  :repl-options {:init-ns head-to-tail.core}
   :main head-to-tail.cli)
