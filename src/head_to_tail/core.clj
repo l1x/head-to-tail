@@ -30,10 +30,11 @@
 (defn- word-to-patterns
   "This must use position based replace"
   [word] 
-  (map re-pattern 
-    (for 
-      [char (range (count word))]  
-      (str "\\b" (subs word 0 char) "." (subs word (+ char 1) ) "\\b"))))
+  (re-pattern
+    (str "\\b"
+      (clojure.string/join "|" (for 
+        [char (range (count word))]  
+        (str (subs word 0 char) "." (subs word (+ char 1) )))) "\\b")))
  
 (defn- find-words
   [p dic] 
